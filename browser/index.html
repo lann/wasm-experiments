@@ -1,0 +1,45 @@
+<html>
+  <textarea id="output" readonly></textarea>
+  <script>
+    function println(msg) {
+      var ta = document.getElementById('output');
+      ta.value += msg + "\n";
+    }
+
+    if (!('WebAssembly' in window)) {
+      println('you need a browser with wasm support enabled :(');
+    }
+    if (!('instantiateStreaming' in WebAssembly)) {
+      println('you need a browser with WASM streaming support');
+    }
+
+    var importObj = {
+      env: {
+        println: (ptr, len) => {
+          var buf = window.wasm.exports.memory.buffer.slice(ptr, ptr+len);
+          var str = new TextDecoder("utf-8").decode(buf);
+          println(str);
+        },
+      },
+    };
+
+    WebAssembly.instantiateStreaming(fetch('payload.wasm'), importObj)
+      .then(result => {
+        var inst = result.instance;
+	window.wasm = inst;
+        for (var name in inst.exports) {
+          var obj = inst.exports[name];
+          if (typeof obj === 'function' && obj.length === 0) {
+            var b = document.createElement('button');
+            b.innerText = name;
+            b.addEventListener('click', evt => {
+              // This is lame but I am tired.
+              var name = evt.srcElement.innerText;
+              window.wasm.exports[name]();
+            });
+            document.body.appendChild(b);
+          }
+        }
+      });
+  </script>
+</html>
