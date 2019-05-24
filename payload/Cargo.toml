@@ -1,0 +1,13 @@
+[package]
+name = "payload"
+version = "0.1.0"
+authors = ["Lann Martin <github-lann@lannbox.com>"]
+edition = "2018"
+
+[dependencies]
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
